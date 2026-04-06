@@ -1,6 +1,6 @@
 {
   "name": "wp-db-mcp",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "MCP server that gives Claude Code direct read-only access to your WordPress/WooCommerce database",
   "main": "index.mjs",
   "type": "module",

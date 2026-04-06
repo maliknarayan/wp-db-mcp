@@ -1,20 +1,64 @@
 # wp-db-mcp
 
-A [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server that gives **Claude Code** direct, read-only access to your WordPress / WooCommerce MySQL database.
+Chat with your WordPress / WooCommerce database in plain English through [Claude Code](https://claude.ai/claude-code).
 
-## Features
+No SQL needed. Just ask questions like:
 
-| Tool | Purpose |
+- *"Show me all products that are out of stock"*
+- *"How many products are in each category?"*
+- *"Get details about the product with SKU ABC-123"*
+- *"List recent orders from last week"*
+- *"What was the total revenue this month?"*
+- *"Find all customers with gmail addresses"*
+- *"Does product #456 have the `_sale_price` meta?"*
+
+This is a [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server that connects Claude Code directly to your MySQL database — read-only and safe.
+
+## Tools
+
+### Connection & Site Info
+| Tool | What you can ask |
 |---|---|
-| `test_connection` | Verify DB connectivity, show site URL + product count |
-| `switch_database` | Hot-swap to a different WP database without restart |
-| `get_product_meta` | Get all meta for a product (by ID or SKU) |
-| `search_product_meta` | Search meta across all products |
-| `list_products` | List products with filters (status, category, search) |
-| `get_product_variations` | Get variations of a variable product |
-| `get_product_terms` | Get categories, tags, attributes for a product |
-| `get_order_meta` | Get meta for a WooCommerce order |
-| `wp_query` | Run arbitrary read-only SELECT queries |
+| `test_connection` | *"Test my database connection"* |
+| `switch_database` | *"Switch to the staging database"* |
+| `get_site_info` | *"What's the site name and currency?"* |
+
+### Products
+| Tool | What you can ask |
+|---|---|
+| `list_products` | *"Show all draft products"*, *"Find products with 'laptop' in the name"* |
+| `get_product` | *"Tell me everything about product #123"*, *"Get product with SKU ABC"* |
+| `get_product_meta` | *"Does product #456 have \_sale\_price meta?"*, *"Show all meta for this SKU"* |
+| `search_product_meta` | *"How many products have \_sale\_price?"*, *"Find all products with meta key X"* |
+| `get_product_variations` | *"Show variations of product #789"* |
+| `get_product_terms` | *"What categories is product #123 in?"* |
+| `count_products` | *"How many products per category?"*, *"Count products by stock status"* |
+| `stock_overview` | *"Which products are out of stock?"*, *"Show low stock products"* |
+
+### Orders & Sales
+| Tool | What you can ask |
+|---|---|
+| `list_orders` | *"Show recent orders"*, *"Orders with status processing"* |
+| `get_order` | *"Full details of order #1001"* |
+| `get_order_meta` | *"Raw meta for order #1001"* |
+| `sales_summary` | *"Revenue this month"*, *"Sales summary for last week"* |
+
+### Customers
+| Tool | What you can ask |
+|---|---|
+| `list_customers` | *"Show all customers"*, *"Find user by email"* |
+| `get_customer` | *"Details about customer john@example.com"*, *"Customer #42 order history"* |
+
+### Categories & Attributes
+| Tool | What you can ask |
+|---|---|
+| `list_categories` | *"What product categories exist?"* |
+| `list_attributes` | *"What product attributes are set up?"*, *"Show all color options"* |
+
+### Fallback
+| Tool | What you can ask |
+|---|---|
+| `wp_query` | *"Run this SQL: SELECT ..."* (read-only SELECT only) |
 
 ## Quick Start
 
@@ -26,11 +70,11 @@ cd wp-db-mcp
 npm install
 ```
 
-### 2. Add to Claude Code settings
+### 2. Add to Claude Code
 
-Open your Claude Code MCP settings file and add the `wp-db` server:
+Add to your MCP settings. You have two options:
 
-**Option A: Project-level** (`.mcp.json` in your project root — recommended):
+**Option A — Project-level** (`.mcp.json` in your project root):
 
 ```json
 {
@@ -51,23 +95,21 @@ Open your Claude Code MCP settings file and add the `wp-db` server:
 }
 ```
 
-**Option B: Global** (`~/.claude/settings.json` under `mcpServers`):
+**Option B — Global** (`~/.claude/settings.json`):
 
-Same config as above, added under the `mcpServers` key in your global settings.
+Add the same config under the `mcpServers` key.
 
-> **Important:** Replace `/full/path/to/wp-db-mcp/index.mjs` with the actual absolute path where you cloned the repo.
+> **Important:** Replace `/full/path/to/wp-db-mcp/index.mjs` with the absolute path where you cloned the repo.
 
 ### 3. Restart Claude Code
 
-The tools will be available immediately. Try asking Claude:
+Start chatting with your database:
 
 ```
 Test my WordPress database connection
 ```
 
 ## Configuration
-
-All configuration is done via environment variables in your MCP settings (no `.env` file needed):
 
 | Variable | Default | Description |
 |---|---|---|
@@ -78,61 +120,35 @@ All configuration is done via environment variables in your MCP settings (no `.e
 | `WP_DB_NAME` | `wordpress` | WordPress database name |
 | `WP_TABLE_PREFIX` | `wp_` | WordPress table prefix |
 
-## Usage Examples
-
-Once configured, just ask Claude in natural language:
-
-```
-List all published products
-```
-
-```
-Get meta for product with SKU "ABC-123"
-```
-
-```
-Show me all variations of product #456
-```
-
-```
-Search for products with meta key "_sale_price"
-```
-
-```
-Run this query: SELECT ID, post_title FROM wp_posts WHERE post_type = 'product' LIMIT 10
-```
-
 ## Switching Databases on the Fly
 
-You can switch to a different WordPress database mid-conversation without restarting:
+Switch to a different WordPress database mid-conversation:
 
 ```
 Switch to database "staging_wp" on host 127.0.0.1 port 3308
 ```
 
-This is useful when working across multiple WordPress sites.
-
-## Connecting to Remote / Staging via SSH Tunnel
+## Remote / Staging via SSH Tunnel
 
 ```bash
-# 1. Open an SSH tunnel to your staging server
+# 1. Open tunnel
 ssh -L 3308:localhost:3306 user@staging-server.com
 
-# 2. Then ask Claude to switch
+# 2. Ask Claude to switch
 Switch to database "staging_db" on host 127.0.0.1 port 3308
 ```
 
 ## Security
 
-- **Read-only:** `wp_query` only allows `SELECT` statements — blocks DROP, DELETE, UPDATE, INSERT, ALTER, TRUNCATE, etc.
-- **No hardcoded credentials:** DB credentials are passed via environment variables in your MCP config
-- **Connection pooling:** Limited to 5 concurrent connections
+- **Read-only** — only SELECT queries allowed, all write operations blocked
+- **No hardcoded credentials** — everything via environment variables
+- **Connection pooling** — max 5 concurrent connections
 
 ## Requirements
 
-- **Node.js** 18+
-- **MySQL** or **MariaDB**
-- **Claude Code** (CLI, Desktop, or IDE extension)
+- Node.js 18+
+- MySQL / MariaDB
+- Claude Code (CLI, Desktop, or IDE extension)
 
 ## License
 
