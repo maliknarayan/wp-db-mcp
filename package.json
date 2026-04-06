@@ -1,17 +1,33 @@
 {
-  "name": "wp-db",
+  "name": "wp-db-mcp",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "MCP server that gives Claude Code direct read-only access to your WordPress/WooCommerce database",
+  "main": "index.mjs",
+  "type": "module",
   "scripts": {
+    "start": "node index.mjs",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "mcp",
+    "claude-code",
+    "wordpress",
+    "woocommerce",
+    "database",
+    "model-context-protocol"
+  ],
+  "author": "maliknarayan",
   "license": "ISC",
-  "type": "commonjs",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/maliknarayan/wp-db-mcp.git"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.27.1",
-    "mysql2": "^3.20.0"
+    "mysql2": "^3.20.0",
+    "zod": "^3.23.0"
   }
 }
